@@ -2,7 +2,7 @@
 import os
 import logging
 import shutil
-import time
+import datetime
 
 BASE_DIR = "/home/pi/tempwatch"
 
@@ -14,7 +14,12 @@ logger=logging.getLogger(__name__)
 logUploadDir = BASE_DIR + "/upload"
 
 tempLogFile = BASE_DIR + "/tempData.log"
-tempLogUploadFile = logUploadDir + "/" + time.strftime("tempData-%Y%m%dT%H%M%S.log")
+
+logTime = datetime.datetime.now() - datetime.timedelta(days=1)
+
+tempLogUploadFile = logUploadDir + "/" + logTime.strftime("tempData-%Y%m%dT%H%M%S.log")
+
+print tempLogUploadFile
 
 # Check that file exist
 if not os.path.isfile(tempLogFile):

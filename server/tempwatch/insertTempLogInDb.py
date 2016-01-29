@@ -5,6 +5,7 @@ import sys
 import os
 import time
 import logging
+import fnmatch
 import MySQLdb as mdb
 import shutil
 
@@ -18,41 +19,37 @@ logger=logging.getLogger(__name__)
 STAGE_DIR = BASE_DIR + "/stage"
 PROCESSED_DIR = BASE_DIR + "/processed"
 
+LOG_FILE_PATTERN = "tempData-*.log"
 LOG_DELIM = ";"
 
 DB_HOST = "localhost"
-DB_NAME = "templog"
-DB_USER = "pi"
-DB_PWD = "pass"
+DB_NAME = "tempwatch"
+DB_USER = "tempwatch"
+DB_PWD = "tempwatch"
+
+SQL_INSERT = "INSERT INTO templog(log_date, temp_value, sensor_id) VALUES (%s, %s, %s)"
 
 def insertIntoDB(aDateValues, aSensorIds, aTempValues):
+    try:
+    
+        con = mdb.connect(host=DB_HOST,user=DB_USER,passwd=DB_PWD,db=DB_NAME)
+        cursor = con.cursor()
+        
+        for i in range(0,len(aTempValues)):
+            cursor.execute(SQL_INSERT, (aDateValues[i], float(aTempValues[i]), aSensorIds[i]))
+            con.commit()
+            
+        con.close()
+        logger.info("Inserted {0} records in db".format(i + 1))
   
-  try:
-    
-    con = mdb.connect(host=DB_HOST,user=DB_USER,
-                  passwd=DB_PWD,db=DB_NAME);
-    cursor = con.cursor()
-    
-    for i in range(0,len(aTempValues)):
-      sql = "INSERT INTO TEMPLOG(logdate, temperature, sensor_id) \
-      VALUES ('%s', '%s', '%s')" % \
-      (aDateValues[i], aTempValues[i], aSensorIds[i])
-      cursor.execute(sql)
-      sql = []
-      con.commit()
-    
-    con.close()
-    
-    logger.info("Inserted {0} records in db".format(i + 1))
-  
-  except mdb.Error, e:
-    logger.error(e)
+    except mdb.Error, e:
+        logger.error(e)
 
 aDateValues = []
 aTempValues = []
 aSensorIds = []
 
-aLogFilesToProcess = os.listdir(STAGE_DIR)
+aLogFilesToProcess = fnmatch.filter(os.listdir(STAGE_DIR), LOG_FILE_PATTERN)
 
 if len(aLogFilesToProcess) == 0:
     logger.info("No files to process, quitting")
