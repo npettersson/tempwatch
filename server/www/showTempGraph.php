@@ -11,7 +11,7 @@ try {
     $sth = $dbh->prepare("
         SELECT ROUND(AVG(temp_value),1) as temp_value, log_date
         FROM templog
-        WHERE log_date >= DATE_SUB(NOW(),INTERVAL 3 DAY)
+        WHERE log_date >= DATE_SUB(CURRENT_DATE(),INTERVAL 3 DAY)
         GROUP BY DATE(log_date), HOUR(log_date)
     ");
     $sth->execute();
