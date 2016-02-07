@@ -9,10 +9,12 @@ try {
 
     /*** The SQL SELECT statement ***/
     $sth = $dbh->prepare("
-        SELECT ROUND(AVG(temp_value),1) as temp_value, log_date
+        SELECT sensor_id, ROUND(AVG(temp_value),1) as temp_value, log_date
         FROM templog
-        WHERE log_date >= DATE_SUB(CURRENT_DATE(),INTERVAL 3 DAY)
-        GROUP BY DATE(log_date), HOUR(log_date)
+        WHERE sensor_id in ('28-00000735dc64','28-00000735bce5')  
+        AND log_date >= DATE_SUB(NOW(),INTERVAL 7 DAY)
+        GROUP BY sensor_id, DATE(log_date), HOUR(log_date)
+        ORDER BY log_date, sensor_id;
     ");
     $sth->execute();
 
@@ -48,6 +50,12 @@ path {
     shape-rendering: crispEdges;
 }
 
+.legend {
+    font-size: 16px;
+    font-weight: bold;
+    text-anchor: middle;
+}
+
 </style>
 <body>
 
@@ -77,7 +85,7 @@ var yAxis = d3.svg.axis().scale(y)
     .orient("left").ticks(5);
 
 // Define the line
-var valueline = d3.svg.line()
+var temperatureLine = d3.svg.line()
     .x(function(d) { return x(d.log_date); })
     .y(function(d) { return y(d.temp_value); });
 
@@ -92,6 +100,7 @@ var svg = d3.select("body")
 
 // Get the data
 <?php echo "data=".$json_data.";" ?>
+
 data.forEach(function(d) {
     d.log_date = parseDate(d.log_date);
     d.temp_value = +d.temp_value;
@@ -100,9 +109,33 @@ data.forEach(function(d) {
 x.domain(d3.extent(data, function(d) { return d.log_date; }));
 y.domain([0, d3.max(data, function(d) { return d.temp_value; })]);
 
-// Add the valueline path.
-svg.append("path")
-	.attr("d", valueline(data));
+// Nest entries by sensor_id
+
+var dataNest = d3.nest().key( function(d) { return d.sensor_id; } ).entries(data);
+
+var color = d3.scale.category10();
+
+legendSpace = width/dataNest.length
+
+// Loop thru sensor_id and draw graph
+dataNest.forEach(function(d,i) {
+	svg.append("path")
+		.attr("class", "line")
+		.style("stroke", function() { return d.color = color(d.key); })
+		.attr("id", 'tag' + d.key.replace(/\s+/g, ''))
+		.attr("d", temperatureLine(d.values));
+	
+	svg.append("text")
+		.attr("x", (legendSpace / 2) + i * legendSpace)
+		.attr("y", height + (margin.bottom/2) + 5)
+		.attr("class", "legend")
+		.style("fill", function() { return d.color = color(d.key); } )
+		.text( function() {
+			if (d.key == '28-00000735dc64') { return "Innertemperatur"; }
+			if (d.key == '28-00000735bce5') { return "Yttertemperatur"; }
+			else { return d.key; } 
+		});
+});
 
 // Add the X Axis
 svg.append("g")
