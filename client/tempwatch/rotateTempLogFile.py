@@ -15,11 +15,9 @@ logUploadDir = BASE_DIR + "/upload"
 
 tempLogFile = BASE_DIR + "/tempData.log"
 
-logTime = datetime.datetime.now() - datetime.timedelta(days=1)
+logTime = datetime.datetime.now()
 
 tempLogUploadFile = logUploadDir + "/" + logTime.strftime("tempData-%Y%m%dT%H%M%S.log")
-
-print tempLogUploadFile
 
 # Check that file exist
 if not os.path.isfile(tempLogFile):
