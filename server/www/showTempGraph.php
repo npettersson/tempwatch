@@ -105,16 +105,14 @@ data.forEach(function(d) {
     d.log_date = parseDate(d.log_date);
     d.temp_value = +d.temp_value;
 });
+
 // Scale the range of the data
 x.domain(d3.extent(data, function(d) { return d.log_date; }));
-y.domain([0, d3.max(data, function(d) { return d.temp_value; })]);
+y.domain([d3.min(data, function(d) { return d.temp_value; }), d3.max(data, function(d) { return d.temp_value; })]);
 
 // Nest entries by sensor_id
-
 var dataNest = d3.nest().key( function(d) { return d.sensor_id; } ).entries(data);
-
 var color = d3.scale.category10();
-
 legendSpace = width/dataNest.length
 
 // Loop thru sensor_id and draw graph

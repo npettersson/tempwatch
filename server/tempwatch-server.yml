@@ -1,0 +1,23 @@
+---
+- hosts: tempwatch-server
+  vars:
+    base_dir: /home/pi/tempwatch2
+    www_dir: /var/www/html/tempwatch
+    
+  tasks:
+    - name: Create base directory
+      file: path="{{ base_dir }}" state="directory"
+
+    - name: Copy subscriber script
+      copy: src="tempwatch/TempwatchSubscriber.py" dest="{{ base_dir }}" mode="0755"
+
+    - name: Create WWW directory
+      file: path="{{ www_dir }}" state="directory"
+
+    - name: Copy web graph script
+      copy: src="www/showTempGraph.php" dest="{{ www_dir }}" mode="0755"
+
+    - name: Copy web index script
+      copy: src="www/index.php" dest="{{ www_dir }}" mode="0755"
+
+...
